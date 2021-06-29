@@ -1,6 +1,7 @@
-{-# LANGUAGE BlockArguments #-}
-
-module Parser.Number where
+module Parser.Number
+  ( pNumberLit,
+  )
+where
 
 import Data.Maybe
 import Text.Megaparsec
@@ -54,8 +55,8 @@ pNumericalTags = do
 
 pIntegerLit :: Parser LispValue
 pIntegerLit = do
-  (base, exactness') <- pNumericalTags
-  let exactness = case exactness' of
+  (base, exactness) <- pNumericalTags
+  let exactF = case exactness of
         Just Inexact' -> Inexact
         _ -> Exact
   let pInteger = case base of
@@ -63,12 +64,11 @@ pIntegerLit = do
         Binary -> L.binary
         Hexadecimal -> L.hexadecimal
         Octal -> L.octal
-  NumberValue . exactness . SchemeInteger <$> pInteger
+  NumberValue . exactF . SchemeInteger <$> pInteger
 
 pFloatingLit :: Parser LispValue
 pFloatingLit = do
-  (base, exactness') <- pNumericalTags
-  let exactness = fromMaybe Inexact' exactness'
+  (base, exactness) <- pNumericalTags
   let fractionParser = case base of
         Decimal -> decFloat True
         Binary -> binFloat True
@@ -81,8 +81,8 @@ pFloatingLit = do
   let pFractional = fractionParser >>= f
   d <- pFractional
   case exactness of
-    Inexact' -> return $ NumberValue $ Inexact $ SchemeReal d
-    Exact' -> error "Rational nyi"
+    Just Exact' -> return $ NumberValue $ Exact $ SchemeRational $ toRational d
+    _ -> return $ NumberValue $ Inexact $ SchemeReal d
 
 pNumberLit :: Parser LispValue
 pNumberLit = try pFloatingLit <|> pIntegerLit

@@ -24,6 +24,9 @@ dependencies:
 - parser-combinators
 - safe
 
+default-extensions:
+  BlockArguments
+
 library:
   source-dirs: src
 

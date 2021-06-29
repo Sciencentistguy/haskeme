@@ -1,5 +1,3 @@
-{-# LANGUAGE BlockArguments #-}
-
 module Parser where
 
 import Control.Monad
@@ -10,7 +8,6 @@ import Safe
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
-import Text.Megaparsec.Char.Number hiding (Parser)
 import Types
 
 spaceConsumer :: Parser ()
@@ -79,7 +76,6 @@ pQuoted = do
   x <- pExpr
   return $ ListValue [AtomValue "quote", x]
 
--- TODO Parser part 1 Excercise 6: hierarchy of number types
 -- TODO Parser part 2 Excercise 1: quasiquotes
 -- TODO Parser part 2 Excercise 2: Vector
 pExpr :: Parser LispValue

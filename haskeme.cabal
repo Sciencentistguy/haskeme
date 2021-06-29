@@ -31,6 +31,8 @@ library
       Paths_haskeme
   hs-source-dirs:
       src
+  default-extensions:
+      BlockArguments
   build-depends:
       base >=4.7 && <5
     , megaparsec
@@ -44,6 +46,8 @@ executable haskeme-exe
       Paths_haskeme
   hs-source-dirs:
       app
+  default-extensions:
+      BlockArguments
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall
   build-depends:
       base >=4.7 && <5
@@ -60,6 +64,8 @@ test-suite haskeme-test
       Paths_haskeme
   hs-source-dirs:
       test
+  default-extensions:
+      BlockArguments
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall
   build-depends:
       base >=4.7 && <5
