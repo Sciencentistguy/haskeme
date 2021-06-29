@@ -2,24 +2,16 @@
 
 module Parser where
 
---( readExpr,
---)
-
 import Control.Monad
 import Data.Char
 import Data.Maybe
-import Data.Void (Void)
+import Parser.Number
 import Safe
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
+import Text.Megaparsec.Char.Number hiding (Parser)
 import Types
-
-type Parser = Parsec Void String
-
-data NumericalTag
-  = BaseTag (Parser Integer)
-  | ExactnessTag (SchemeNumber' -> SchemeNumber)
 
 spaceConsumer :: Parser ()
 spaceConsumer =
@@ -52,72 +44,6 @@ pAtom = do
     "#t" -> BooleanValue True
     "#f" -> BooleanValue False
     _ -> AtomValue atom
-
-pIntegerLit :: Parser LispValue
-pIntegerLit = do
-  (base, exactness) <- pNumericalTags
-  NumberValue . exactness . SchemeInteger <$> base
-
-pFloatingLit :: Parser LispValue
-pFloatingLit = do
-  NumberValue . (Exact . SchemeReal) <$> L.float
-
-pNumericalTags :: Parser (Parser Integer, SchemeNumber' -> SchemeNumber)
-pNumericalTags = do
-  (baseMaybe, exactnessMaybe) <- do
-    -- TODO make this produce better error messages
-    hash <- fmap isNothing <$> optional $ char '#'
-    if hash
-      then return (Nothing, Nothing)
-      else do
-        firstTagChar <- oneOf "boxie"
-        let firstTag = case firstTagChar of
-              'b' -> BaseTag L.binary
-              'o' -> BaseTag L.octal
-              'x' -> BaseTag L.hexadecimal
-              'i' -> ExactnessTag Inexact
-              'e' -> ExactnessTag Exact
-              _ -> error "unreachable"
-        hash <- fmap isNothing <$> optional $ char '#'
-        if hash
-          then return case firstTag of
-            BaseTag x -> (Just x, Nothing)
-            ExactnessTag x -> (Nothing, Just x)
-          else do
-            secondTagChar <- case firstTag of
-              BaseTag _ -> oneOf "ie"
-              ExactnessTag _ -> oneOf "box"
-            let secondTag = case secondTagChar of
-                  'b' -> BaseTag L.binary
-                  'o' -> BaseTag L.octal
-                  'x' -> BaseTag L.hexadecimal
-                  'i' -> ExactnessTag Inexact
-                  'e' -> ExactnessTag Exact
-                  _ -> error "unreachable"
-            return case (firstTag, secondTag) of
-              (BaseTag b, ExactnessTag e) -> (Just b, Just e)
-              (ExactnessTag e, BaseTag b) -> (Just b, Just e)
-              _ -> error "unreachable"
-  let base = fromMaybe L.decimal baseMaybe
-  let exactness = fromMaybe Exact exactnessMaybe
-  return (base, exactness)
-
---TODO Parser part 1 Excercise 6: floating point numbers (binary, octal, hex)
---TODO Parser part 1 Excercise 6: hierarchy of number types
---TODO Parser part 2 Excercise 1: quasiquotes
---TODO Parser part 2 Excercise 2: Vector
-pExpr :: Parser LispValue
-pExpr =
-  try pFloatingLit
-    <|> pIntegerLit
-    <|> pCharLit
-    <|> pAtom
-    <|> pStringLit
-    <|> do
-      _ <- symbol "("
-      x <- try pList <|> pDottedList
-      _ <- symbol ")"
-      return x
 
 pCharLit :: Parser LispValue
 pCharLit = do
@@ -152,6 +78,21 @@ pQuoted = do
   _ <- char '\''
   x <- pExpr
   return $ ListValue [AtomValue "quote", x]
+
+-- TODO Parser part 1 Excercise 6: hierarchy of number types
+-- TODO Parser part 2 Excercise 1: quasiquotes
+-- TODO Parser part 2 Excercise 2: Vector
+pExpr :: Parser LispValue
+pExpr =
+  pNumberLit
+    <|> pCharLit
+    <|> pAtom
+    <|> pStringLit
+    <|> do
+      _ <- symbol "("
+      x <- try pList <|> pDottedList
+      _ <- symbol ")"
+      return x
 
 readExpr input = case parse (spaceConsumer >> pExpr) "<stdin>" input of
   Left err -> "No match:\n" ++ errorBundlePretty err
