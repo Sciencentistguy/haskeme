@@ -23,7 +23,8 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
+      Parser
+      Types
   other-modules:
       Paths_haskeme
   hs-source-dirs:
