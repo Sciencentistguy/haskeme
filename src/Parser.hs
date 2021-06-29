@@ -102,8 +102,10 @@ pNumericalTags = do
   let exactness = fromMaybe Exact exactnessMaybe
   return (base, exactness)
 
---TODO challenge 6: floating point numbers (binary, octal, hex)
---TODO challenge 7: hierarchy of number types
+--TODO Parser part 1 Excercise 6: floating point numbers (binary, octal, hex)
+--TODO Parser part 1 Excercise 6: hierarchy of number types
+--TODO Parser part 2 Excercise 1: quasiquotes
+--TODO Parser part 2 Excercise 2: Vector
 pExpr :: Parser LispValue
 pExpr =
   try pFloatingLit
@@ -111,6 +113,11 @@ pExpr =
     <|> pCharLit
     <|> pAtom
     <|> pStringLit
+    <|> do
+      _ <- symbol "("
+      x <- try pList <|> pDottedList
+      _ <- symbol ")"
+      return x
 
 pCharLit :: Parser LispValue
 pCharLit = do
@@ -127,6 +134,24 @@ pCharLit = do
     Just "newline" -> return $ CharacterValue '\n'
     -- TODO are there more of these?
     _ -> fail "invalid named character in character literal"
+
+pList :: Parser LispValue
+pList = ListValue <$> sepBy pExpr spaceConsumer
+
+pDottedList :: Parser LispValue
+pDottedList = do
+  head <- endBy pExpr spaceConsumer
+  tail <- do
+    _ <- char '.'
+    spaceConsumer
+    pExpr
+  return $ DottedListValue head tail
+
+pQuoted :: Parser LispValue
+pQuoted = do
+  _ <- char '\''
+  x <- pExpr
+  return $ ListValue [AtomValue "quote", x]
 
 readExpr input = case parse (spaceConsumer >> pExpr) "<stdin>" input of
   Left err -> "No match:\n" ++ errorBundlePretty err
