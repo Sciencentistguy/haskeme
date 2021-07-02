@@ -23,6 +23,7 @@ dependencies:
 - megaparsec 
 - parser-combinators
 - safe
+- vector
 
 default-extensions:
   BlockArguments

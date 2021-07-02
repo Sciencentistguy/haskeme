@@ -1,5 +1,6 @@
 module Types where
 
+import Data.Vector (Vector)
 import Data.Void (Void)
 import Text.Megaparsec (Parsec)
 
@@ -13,6 +14,7 @@ data LispValue
   | StringValue String
   | BooleanValue Bool
   | CharacterValue Char
+  | VectorValue (Vector LispValue)
   deriving (Show, Eq)
 
 data SchemeNumber
@@ -22,8 +24,8 @@ data SchemeNumber
 
 data SchemeNumber'
   = SchemeComplex
-      { scReal :: Integer,
-        scImag :: Integer
+      { scReal :: SchemeNumber',
+        scImag :: SchemeNumber'
       }
   | SchemeReal Double
   | SchemeRational Rational

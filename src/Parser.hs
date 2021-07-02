@@ -3,6 +3,7 @@ module Parser where
 import Control.Monad
 import Data.Char
 import Data.Maybe
+import qualified Data.Vector as V
 import Parser.Number
 import Safe
 import Text.Megaparsec
@@ -10,14 +11,14 @@ import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
 import Types
 
-spaceConsumer :: Parser ()
-spaceConsumer =
+spaces :: Parser ()
+spaces =
   L.space
     space1
     (L.skipLineComment ";")
     empty
 
-symbol = L.symbol spaceConsumer
+symbol = L.symbol spaces
 
 pStringLit :: Parser LispValue
 pStringLit = do
@@ -59,14 +60,14 @@ pCharLit = do
     _ -> fail "invalid named character in character literal"
 
 pList :: Parser LispValue
-pList = ListValue <$> sepBy pExpr spaceConsumer
+pList = ListValue <$> sepBy pExpr spaces
 
 pDottedList :: Parser LispValue
 pDottedList = do
-  head <- endBy pExpr spaceConsumer
+  head <- endBy pExpr spaces
   tail <- do
     _ <- char '.'
-    spaceConsumer
+    spaces
     pExpr
   return $ DottedListValue head tail
 
@@ -76,11 +77,18 @@ pQuoted = do
   x <- pExpr
   return $ ListValue [AtomValue "quote", x]
 
+pVector :: Parser LispValue
+pVector = do
+  _ <- symbol "#("
+  vec <- sepBy pExpr spaces
+  _ <- symbol ")"
+  return $ VectorValue $ V.fromList vec
+
 -- TODO Parser part 2 Excercise 1: quasiquotes
--- TODO Parser part 2 Excercise 2: Vector
 pExpr :: Parser LispValue
 pExpr =
-  pNumberLit
+  pVector
+    <|> pNumberLit
     <|> pCharLit
     <|> pAtom
     <|> pStringLit
@@ -90,7 +98,7 @@ pExpr =
       _ <- symbol ")"
       return x
 
-readExpr input = case parse (spaceConsumer >> pExpr) "<stdin>" input of
+readExpr input = case parse (spaces >> pExpr) "<stdin>" input of
   Left err -> "No match:\n" ++ errorBundlePretty err
   Right val -> "Found value: " ++ show val
 

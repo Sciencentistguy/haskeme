@@ -38,6 +38,7 @@ library
     , megaparsec
     , parser-combinators
     , safe
+    , vector
   default-language: Haskell2010
 
 executable haskeme-exe
@@ -55,6 +56,7 @@ executable haskeme-exe
     , megaparsec
     , parser-combinators
     , safe
+    , vector
   default-language: Haskell2010
 
 test-suite haskeme-test
@@ -73,4 +75,5 @@ test-suite haskeme-test
     , megaparsec
     , parser-combinators
     , safe
+    , vector
   default-language: Haskell2010
