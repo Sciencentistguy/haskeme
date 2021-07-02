@@ -18,6 +18,7 @@ spaces =
     (L.skipLineComment ";")
     empty
 
+symbol :: String -> Parser String
 symbol = L.symbol spaces
 
 pStringLit :: Parser LispValue
@@ -84,12 +85,33 @@ pVector = do
   _ <- symbol ")"
   return $ VectorValue $ V.fromList vec
 
--- TODO Parser part 2 Excercise 1: quasiquotes
+pQuasiQuoteExpr :: Parser LispValue
+pQuasiQuoteExpr = do
+  c <- optional $ char ','
+  e <- pExpr
+  return case c of
+    Just _ -> ListValue [AtomValue "unquote", e]
+    Nothing -> e
+
+pQuasiQuoteList :: Parser LispValue
+pQuasiQuoteList = do
+  symbol "("
+  l <- sepBy pQuasiQuoteExpr spaces
+  symbol ")"
+  return $ ListValue l
+
+pQuasiQuote :: Parser LispValue
+pQuasiQuote = do
+  char '`'
+  x <- pQuasiQuoteList <|> pQuasiQuoteExpr
+  return $ ListValue [AtomValue "quasiquote", x]
+
 pExpr :: Parser LispValue
 pExpr =
   pVector
     <|> pNumberLit
     <|> pCharLit
+    <|> pQuasiQuote
     <|> pAtom
     <|> pStringLit
     <|> do
