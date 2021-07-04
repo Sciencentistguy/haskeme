@@ -23,10 +23,16 @@ source-repository head
 
 library
   exposed-modules:
+      Evaluator
+      Evaluator.Procedure
+      Evaluator.Procedure.Number
+      Evaluator.Procedure.Symbol
+      Evaluator.Procedure.Type
       Parser
       Parser.Number
       Text.Megaparsec.Char.Number
       Types
+      Util
   other-modules:
       Paths_haskeme
   hs-source-dirs:

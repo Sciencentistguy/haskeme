@@ -4,6 +4,7 @@ import Control.Monad
 import Data.Char
 import Data.Maybe
 import qualified Data.Vector as V
+import Data.Void (Void)
 import Parser.Number
 import Safe
 import Text.Megaparsec
@@ -29,10 +30,7 @@ pStringLit = do
   return $ StringValue str
 
 pLispSymbol :: Parser Char
-pLispSymbol = do
-  c <- choice $ symbol . (: []) <$> "!#$%&|*+-/:<=>?@^_~"
-  assert (length c == 1) $ "length c == " ++ show (length c) -- TODO probably unnecessary
-  return $ head c
+pLispSymbol = choice $ char <$> "!#$%&|*+-/:<=>?@^_~"
 
 pAtom :: Parser LispValue
 pAtom = do
@@ -61,7 +59,7 @@ pCharLit = do
     _ -> fail "invalid named character in character literal"
 
 pList :: Parser LispValue
-pList = ListValue <$> sepBy pExpr spaces
+pList = ListValue <$> sepEndBy pExpr spaces
 
 pDottedList :: Parser LispValue
 pDottedList = do
@@ -112,6 +110,7 @@ pExpr =
     <|> pNumberLit
     <|> pCharLit
     <|> pQuasiQuote
+    <|> pQuoted
     <|> pAtom
     <|> pStringLit
     <|> do
@@ -120,9 +119,8 @@ pExpr =
       _ <- symbol ")"
       return x
 
-readExpr input = case parse (spaces >> pExpr) "<stdin>" input of
-  Left err -> "No match:\n" ++ errorBundlePretty err
-  Right val -> "Found value: " ++ show val
+readExpr :: String -> Either (ParseErrorBundle String Void) LispValue
+readExpr = parse (spaces >> pExpr) "<stdin>"
 
 assert :: MonadFail m => Bool -> String -> m ()
 assert expr msg = unless expr $ fail $ "assert failed: " ++ msg
