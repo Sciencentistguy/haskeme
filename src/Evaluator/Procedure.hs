@@ -42,5 +42,7 @@ builtins func = case func of
   "car" -> Just car
   "cdr" -> Just cdr
   "cons" -> Just cons
+  "eq?" -> Just eqv
   "eqv?" -> Just eqv
+  "equal?" -> Just equal
   _ -> Nothing

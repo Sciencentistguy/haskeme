@@ -1,5 +1,6 @@
 module Evaluator.Procedure.Boolean where
 
+import Control.Monad.Except
 import Types
 
 lvBoolBinop :: (LispValue -> SchemeResult a) -> (a -> a -> Bool) -> [LispValue] -> SchemeResult LispValue
@@ -23,3 +24,22 @@ eqv [a, b] = case (a, b) of
         _ -> False
   (_, _) -> Right $ BooleanValue False
 eqv bal = Left $ NumArgsError 2 bal
+
+unpackEquals :: LispValue -> LispValue -> Unpacker -> SchemeResult Bool
+unpackEquals arg1 arg2 (AnyUnpacker unpacker) =
+  do
+    unpacked1 <- unpacker arg1
+    unpacked2 <- unpacker arg2
+    return $ unpacked1 == unpacked2
+    `catchError` const (return False)
+
+equal :: SchemeFunction
+equal [a, b] = do
+  primitiveEquals <-
+    or
+      <$> traverse
+        (unpackEquals a b)
+        [AnyUnpacker valueToNumber, AnyUnpacker valueToString, AnyUnpacker valueToBool]
+  eqvEquals <- eqv [a, b]
+  return $ BooleanValue $ primitiveEquals || let (BooleanValue x) = eqvEquals in x
+equal bal = Left $ NumArgsError 2 bal
