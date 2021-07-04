@@ -4,7 +4,7 @@ import Types
 
 lvIsSymbol :: [LispValue] -> LispValue
 lvIsSymbol [val] = BooleanValue case val of
-  AtomValue _ -> True
+  SymbolValue _ -> True
   _ -> False
 lvIsSymbol _ = error "Error: procedure `symbol?` takes 1 argument."
 

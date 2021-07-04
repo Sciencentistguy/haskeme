@@ -12,8 +12,8 @@ eval :: LispValue -> LispValue
 eval val@(StringValue _) = val
 eval val@(NumberValue _) = val
 eval val@(BooleanValue _) = val
-eval (ListValue [AtomValue "quote", val]) = val
-eval (ListValue (AtomValue func : args)) = apply func $ eval <$> args
+eval (ListValue [SymbolValue "quote", val]) = val
+eval (ListValue (SymbolValue func : args)) = apply func $ eval <$> args
 eval _ = error "NYI"
 
 apply fName args = case builtins fName of

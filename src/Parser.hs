@@ -32,15 +32,15 @@ pStringLit = do
 pLispSymbol :: Parser Char
 pLispSymbol = choice $ char <$> "!#$%&|*+-/:<=>?@^_~"
 
-pAtom :: Parser LispValue
-pAtom = do
+pSymbol :: Parser LispValue
+pSymbol = do
   first <- letterChar <|> pLispSymbol
   rest <- many $ alphaNumChar <|> pLispSymbol
   let atom = first : rest
   return case atom of
     "#t" -> BooleanValue True
     "#f" -> BooleanValue False
-    _ -> AtomValue atom
+    _ -> SymbolValue atom
 
 pCharLit :: Parser LispValue
 pCharLit = do
@@ -74,7 +74,7 @@ pQuoted :: Parser LispValue
 pQuoted = do
   _ <- char '\''
   x <- pExpr
-  return $ ListValue [AtomValue "quote", x]
+  return $ ListValue [SymbolValue "quote", x]
 
 pVector :: Parser LispValue
 pVector = do
@@ -88,7 +88,7 @@ pQuasiQuoteExpr = do
   c <- optional $ char ','
   e <- pExpr
   return case c of
-    Just _ -> ListValue [AtomValue "unquote", e]
+    Just _ -> ListValue [SymbolValue "unquote", e]
     Nothing -> e
 
 pQuasiQuoteList :: Parser LispValue
@@ -102,7 +102,7 @@ pQuasiQuote :: Parser LispValue
 pQuasiQuote = do
   char '`'
   x <- pQuasiQuoteList <|> pQuasiQuoteExpr
-  return $ ListValue [AtomValue "quasiquote", x]
+  return $ ListValue [SymbolValue "quasiquote", x]
 
 pExpr :: Parser LispValue
 pExpr =
@@ -111,7 +111,7 @@ pExpr =
     <|> pCharLit
     <|> pQuasiQuote
     <|> pQuoted
-    <|> pAtom
+    <|> pSymbol
     <|> pStringLit
     <|> do
       _ <- symbol "("

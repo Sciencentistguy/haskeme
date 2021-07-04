@@ -8,7 +8,7 @@ import Text.Megaparsec (Parsec)
 type Parser = Parsec Void String
 
 data LispValue
-  = AtomValue String
+  = SymbolValue String
   | ListValue [LispValue]
   | DottedListValue [LispValue] LispValue
   | NumberValue SchemeNumber
