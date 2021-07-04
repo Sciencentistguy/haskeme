@@ -25,6 +25,8 @@ library
   exposed-modules:
       Evaluator
       Evaluator.Procedure
+      Evaluator.Procedure.Boolean
+      Evaluator.Procedure.List
       Evaluator.Procedure.Number
       Evaluator.Procedure.Symbol
       Evaluator.Procedure.Type

@@ -29,6 +29,16 @@ valueToInteger v = case v of
     _ -> Left $ TypeMismatchError "integer" lv
   _ -> Left $ TypeMismatchError "number" v
 
+valueToBool :: LispValue -> SchemeResult Bool
+valueToBool v = case v of
+  BooleanValue False -> Right False
+  _ -> Right True
+
+valueToString :: LispValue -> SchemeResult String
+valueToString v = case v of
+  StringValue s -> Right s
+  _ -> Left $ TypeMismatchError "string" v
+
 removeExactness :: SchemeNumber -> SchemeNumber'
 removeExactness a = case a of
   Exact a -> a
@@ -45,8 +55,24 @@ data SchemeNumber'
   | SchemeInteger Integer
   deriving (Show, Eq)
 
+instance Ord SchemeNumber where
+  compare l r = removeExactness l `compare` removeExactness r
+
+instance Ord SchemeNumber' where
+  compare l r = case (l, r) of
+    (SchemeReal l, SchemeReal r) -> l `compare` r
+    (SchemeReal l, SchemeRational r) -> toRational l `compare` r
+    (SchemeReal l, SchemeInteger r) -> l `compare` fromInteger r
+    (SchemeRational l, SchemeReal r) -> l `compare` toRational r
+    (SchemeRational l, SchemeRational r) -> l `compare` r
+    (SchemeRational l, SchemeInteger r) -> l `compare` toRational r
+    (SchemeInteger l, SchemeInteger r) -> l `compare` r
+    (SchemeInteger l, SchemeRational r) -> toRational l `compare` r
+    (SchemeInteger l, SchemeReal r) -> fromInteger l `compare` r
+
 data LispError
   = NumArgsError Integer [LispValue]
+  | NotEnoughArgsError Integer Integer
   | TypeMismatchError String LispValue
   | ParserError (ParseErrorBundle String Void)
   | BadSpecialFormError String LispValue
@@ -61,6 +87,12 @@ instance Show LispError where
       ++ " arguments. Actually found `"
       ++ show found
       ++ "`."
+  show (NotEnoughArgsError min actual) =
+    "Error: expected at least "
+      ++ show min
+      ++ " args, found "
+      ++ show actual
+      ++ "."
   show (TypeMismatchError expected found) =
     "Error: expected type `"
       ++ expected

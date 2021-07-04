@@ -6,8 +6,8 @@ import Control.Monad
 import Types
 import Util
 
-lvNumericOp :: (forall a. Num a => a -> a -> a) -> LispValue -> LispValue -> SchemeResult LispValue
-lvNumericOp f a b = do
+lvNumericBinop :: (forall a. Num a => a -> a -> a) -> LispValue -> LispValue -> SchemeResult LispValue
+lvNumericBinop f a b = do
   a <- valueToNumber a
   b <- valueToNumber b
   let exactness = case (a, b) of
@@ -25,8 +25,8 @@ lvNumericOp f a b = do
       (SchemeInteger a, SchemeRational b) -> SchemeRational $ fromInteger a `f` b
       (SchemeInteger a, SchemeInteger b) -> SchemeInteger $ a `f` b
 
-lvFractionalOp :: (forall a. Fractional a => a -> a -> a) -> LispValue -> LispValue -> SchemeResult LispValue
-lvFractionalOp f a b = do
+lvFractionalBinop :: (forall a. Fractional a => a -> a -> a) -> LispValue -> LispValue -> SchemeResult LispValue
+lvFractionalBinop f a b = do
   a <- valueToNumber a
   b <- valueToNumber b
   let exactness = case (a, b) of
@@ -45,28 +45,19 @@ lvFractionalOp f a b = do
       -- TODO this should check there can't be an exact float
       (SchemeInteger a, SchemeInteger b) -> SchemeRational $ toRational a `f` toRational b
 
-lvAdd :: SchemeFunction
-lvAdd params =
-  let zero = NumberValue $ Exact $ SchemeInteger 0
-   in foldM (lvNumericOp (+)) zero params
+lvNumericFoldOp :: (forall a. Num a => a -> a -> a) -> [LispValue] -> Either LispError LispValue
+lvNumericFoldOp op (first : rest) = foldM (lvNumericBinop op) first rest
+lvNumericFoldOp _ _ = Left $ NotEnoughArgsError 1 0
 
-lvSub :: SchemeFunction
-lvSub params =
-  let zero = NumberValue $ Exact $ SchemeInteger 0
-   in foldM (lvNumericOp (-)) zero params
+lvFractionalFoldop ::
+  (forall a. Fractional a => a -> a -> a) ->
+  [LispValue] ->
+  Either LispError LispValue
+lvFractionalFoldop op (first : rest) = foldM (lvFractionalBinop op) first rest
+lvFractionalFoldop _ _ = Left $ NotEnoughArgsError 1 0
 
-lvMul :: SchemeFunction
-lvMul params =
-  let one = NumberValue $ Exact $ SchemeInteger 1
-   in foldM (lvNumericOp (*)) one params
-
-lvDiv :: SchemeFunction
-lvDiv params =
-  let one = NumberValue $ Exact $ SchemeInteger 1
-   in foldM (lvFractionalOp (/)) one params
-
-lvMod :: SchemeFunction
-lvMod [a, b] = do
+lvIntegralBinop :: (Integer -> Integer -> Integer) -> [LispValue] -> Either LispError LispValue
+lvIntegralBinop op [a, b] = do
   a <- valueToNumber a
   b <- valueToNumber b
   let exactness = case (a, b) of
@@ -74,32 +65,6 @@ lvMod [a, b] = do
         _ -> Inexact
   return $
     NumberValue $ exactness case (removeExactness a, removeExactness b) of
-      (SchemeInteger a, SchemeInteger b) -> SchemeInteger $ a `mod` b
+      (SchemeInteger a, SchemeInteger b) -> SchemeInteger $ a `op` b
       _ -> unreachable
-lvMod args = Left $ NumArgsError 2 args
-
-lvQuot :: SchemeFunction
-lvQuot [a, b] = do
-  a <- valueToNumber a
-  b <- valueToNumber b
-  let exactness = case (a, b) of
-        (Exact _, Exact _) -> Exact
-        _ -> Inexact
-  return $
-    NumberValue $ exactness case (removeExactness a, removeExactness b) of
-      (SchemeInteger a, SchemeInteger b) -> SchemeInteger $ a `quot` b
-      _ -> unreachable
-lvQuot args = Left $ NumArgsError 2 args
-
-lvRem :: SchemeFunction
-lvRem [a, b] = do
-  a <- valueToNumber a
-  b <- valueToNumber b
-  let exactness = case (a, b) of
-        (Exact _, Exact _) -> Exact
-        _ -> Inexact
-  return $
-    NumberValue $ exactness case (removeExactness a, removeExactness b) of
-      (SchemeInteger a, SchemeInteger b) -> SchemeInteger $ a `rem` b
-      _ -> unreachable
-lvRem args = Left $ NumArgsError 2 args
+lvIntegralBinop _ a = Left $ NumArgsError 2 a
