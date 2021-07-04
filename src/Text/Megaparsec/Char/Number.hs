@@ -2,12 +2,11 @@
 
 module Text.Megaparsec.Char.Number where
 
-import Control.Monad (ap, liftM)
+import Control.Monad (ap)
 import Data.Char (digitToInt)
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
-import Text.Megaparsec.Stream
 import Types
 
 -- * floats
@@ -84,13 +83,10 @@ fractExponent :: (Floating f) => Integer -> Parser f
 fractExponent i = fractExp i True
 
 -- | parse a hex floating point number given the number before a dot, p or P
-hexFractExp ::
-  (Floating f) =>
-  Integer ->
-  Bool ->
-  Parser f
+hexFractExp :: (Floating f) => Integer -> Bool -> Parser f
 hexFractExp i b = genFractExp i (hexFraction b) hexExponentFactor
 
+octFractExp :: Floating f => Integer -> Bool -> Parser f
 octFractExp i b = genFractExp i (octFraction b) hexExponentFactor
 
 -- | parse a binary floating point number given the number before a dot, p or P

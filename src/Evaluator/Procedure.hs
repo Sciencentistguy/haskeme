@@ -5,7 +5,7 @@ import Evaluator.Procedure.Symbol
 import Evaluator.Procedure.Type
 import Types
 
-builtins :: String -> Maybe ([LispValue] -> LispValue)
+builtins :: String -> Maybe SchemeFunction
 builtins func = case func of
   "+" -> Just lvAdd
   "-" -> Just lvSub

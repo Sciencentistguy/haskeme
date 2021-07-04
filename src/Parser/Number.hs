@@ -77,7 +77,7 @@ pFloatingLit = do
   let f x = do
         case x of
           Right f -> return f
-          Left i -> fail ""
+          Left _ -> fail ""
   let pFractional = fractionParser >>= f
   d <- pFractional
   case exactness of

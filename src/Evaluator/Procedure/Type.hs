@@ -2,50 +2,50 @@ module Evaluator.Procedure.Type where
 
 import Types
 
-lvIsSymbol :: [LispValue] -> LispValue
-lvIsSymbol [val] = BooleanValue case val of
+lvIsSymbol :: SchemeFunction
+lvIsSymbol [val] = Right $ BooleanValue case val of
   SymbolValue _ -> True
   _ -> False
-lvIsSymbol _ = error "Error: procedure `symbol?` takes 1 argument."
+lvIsSymbol args = Left $ NumArgsError 1 args
 
-lvIsList :: [LispValue] -> LispValue
-lvIsList [val] = BooleanValue case val of
+lvIsList :: SchemeFunction
+lvIsList [val] = Right $ BooleanValue case val of
   ListValue _ -> True
   _ -> False
-lvIsList _ = error "Error: procedure `list?` takes 1 argument."
+lvIsList args = Left $ NumArgsError 1 args
 
-lvIsDottedList :: [LispValue] -> LispValue
-lvIsDottedList [val] = BooleanValue case val of
+lvIsDottedList :: SchemeFunction
+lvIsDottedList [val] = Right $ BooleanValue case val of
   DottedListValue _ _ -> True
   _ -> False
-lvIsDottedList _ = error "Error: procedure `dotted?` takes 1 argument."
+lvIsDottedList args = Left $ NumArgsError 1 args
 
-lvIsBoolean :: [LispValue] -> LispValue
-lvIsBoolean [val] = BooleanValue case val of
+lvIsBoolean :: SchemeFunction
+lvIsBoolean [val] = Right $ BooleanValue case val of
   BooleanValue _ -> True
   _ -> False
-lvIsBoolean _ = error "Error: procedure `boolean?` takes 1 argument."
+lvIsBoolean args = Left $ NumArgsError 1 args
 
-lvIsCharacter :: [LispValue] -> LispValue
-lvIsCharacter [val] = BooleanValue case val of
+lvIsCharacter :: SchemeFunction
+lvIsCharacter [val] = Right $ BooleanValue case val of
   CharacterValue _ -> True
   _ -> False
-lvIsCharacter _ = error "Error: procedure `char?` takes 1 argument."
+lvIsCharacter args = Left $ NumArgsError 1 args
 
-lvIsString :: [LispValue] -> LispValue
-lvIsString [val] = BooleanValue case val of
+lvIsString :: SchemeFunction
+lvIsString [val] = Right $ BooleanValue case val of
   StringValue _ -> True
   _ -> False
-lvIsString _ = error "Error: procedure `string?` takes 1 argument."
+lvIsString args = Left $ NumArgsError 1 args
 
-lvIsNumber :: [LispValue] -> LispValue
-lvIsNumber [val] = BooleanValue case val of
+lvIsNumber :: SchemeFunction
+lvIsNumber [val] = Right $ BooleanValue case val of
   NumberValue _ -> True
   _ -> False
-lvIsNumber _ = error "Error: procedure `number?` takes 1 argument."
+lvIsNumber args = Left $ NumArgsError 1 args
 
-lvIsVector :: [LispValue] -> LispValue
-lvIsVector [val] = BooleanValue case val of
+lvIsVector :: SchemeFunction
+lvIsVector [val] = Right $ BooleanValue case val of
   BooleanValue _ -> True
   _ -> False
-lvIsVector _ = error "Error: procedure `vector?` takes 1 argument."
+lvIsVector args = Left $ NumArgsError 1 args

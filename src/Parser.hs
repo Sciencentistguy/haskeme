@@ -2,11 +2,9 @@ module Parser where
 
 import Control.Monad
 import Data.Char
-import Data.Maybe
 import qualified Data.Vector as V
 import Data.Void (Void)
 import Parser.Number
-import Safe
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
@@ -93,14 +91,14 @@ pQuasiQuoteExpr = do
 
 pQuasiQuoteList :: Parser LispValue
 pQuasiQuoteList = do
-  symbol "("
+  _ <- symbol "("
   l <- sepBy pQuasiQuoteExpr spaces
-  symbol ")"
+  _ <- symbol ")"
   return $ ListValue l
 
 pQuasiQuote :: Parser LispValue
 pQuasiQuote = do
-  char '`'
+  _ <- char '`'
   x <- pQuasiQuoteList <|> pQuasiQuoteExpr
   return $ ListValue [SymbolValue "quasiquote", x]
 

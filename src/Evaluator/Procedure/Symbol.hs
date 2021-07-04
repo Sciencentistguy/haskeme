@@ -2,14 +2,14 @@ module Evaluator.Procedure.Symbol where
 
 import Types
 
-lvSymbolToString :: [LispValue] -> LispValue
+lvSymbolToString :: SchemeFunction
 lvSymbolToString [a] = case a of
-  SymbolValue s -> StringValue s
-  _ -> error "Error: argument to `symbol->string` must be a symbol"
-lvSymbolToString _ = error "Error: `symbol->string` takes 1 argument"
+  SymbolValue s -> Right $ StringValue s
+  _ -> Left $ TypeMismatchError "symbol" a
+lvSymbolToString args = Left $ NumArgsError 1 args
 
-lvStringToSymbol :: [LispValue] -> LispValue
+lvStringToSymbol :: SchemeFunction
 lvStringToSymbol [a] = case a of
-  StringValue s -> SymbolValue s
-  _ -> error "Error: argument to `string->symbol` must be a symbol"
-lvStringToSymbol _ = error "Error: `string->symbol` takes 1 argument"
+  StringValue s -> Right $ SymbolValue s
+  _ -> Left $ TypeMismatchError "string" a
+lvStringToSymbol args = Left $ NumArgsError 1 args

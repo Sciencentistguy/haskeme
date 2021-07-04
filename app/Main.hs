@@ -1,9 +1,11 @@
 module Main where
 
+import Data.Either
 import Evaluator
 import Parser
 import System.Environment
 import Text.Megaparsec.Error
+import Util
 
 main :: IO ()
 main = do
@@ -14,4 +16,7 @@ main = do
       putStrLn $ errorBundlePretty err
       return $ error ""
   print ast
-  print $ eval ast
+  let evaled = show <$> eval ast
+  let v = trapError evaled
+  let x = fromRight undefined v
+  putStrLn x
