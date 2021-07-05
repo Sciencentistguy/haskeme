@@ -130,5 +130,3 @@ instance Show LispError where
 type SchemeResult = Either LispError
 
 type SchemeFunction = [LispValue] -> SchemeResult LispValue
-
-data Unpacker = forall a. Eq a => AnyUnpacker (LispValue -> SchemeResult a)

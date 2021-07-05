@@ -44,5 +44,5 @@ builtins func = case func of
   "cons" -> Just cons
   "eq?" -> Just eqv
   "eqv?" -> Just eqv
-  "equal?" -> Just equal
+  "equal?" -> Just eqv
   _ -> Nothing
