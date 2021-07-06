@@ -55,7 +55,7 @@ pNumericalTags = do
 
 pIntegerLit :: Parser LispValue
 pIntegerLit = do
-  (base, exactness) <- pNumericalTags
+  (base, exactness) <- try pNumericalTags
   let exactF = case exactness of
         Just Inexact' -> Inexact
         _ -> Exact
@@ -68,7 +68,7 @@ pIntegerLit = do
 
 pFloatingLit :: Parser LispValue
 pFloatingLit = do
-  (base, exactness) <- pNumericalTags
+  (base, exactness) <- try pNumericalTags
   let fractionParser = case base of
         Decimal -> decFloat True
         Binary -> binFloat True
