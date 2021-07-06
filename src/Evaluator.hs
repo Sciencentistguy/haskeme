@@ -14,6 +14,7 @@ eval :: LispValue -> SchemeResult LispValue
 eval val@(StringValue _) = Right val
 eval val@(NumberValue _) = Right val
 eval val@(BooleanValue _) = Right val
+eval val@(CharacterValue _) = Right val
 eval (ListValue [SymbolValue "quote", val]) = Right val
 eval (ListValue (SymbolValue "cond" : vals)) = cond vals
 eval (ListValue (SymbolValue "case" : val : clauses)) = case' val clauses

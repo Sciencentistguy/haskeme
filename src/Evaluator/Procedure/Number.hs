@@ -47,14 +47,14 @@ lvFractionalBinop f a b = do
 
 lvNumericFoldOp :: (forall a. Num a => a -> a -> a) -> [LispValue] -> Either LispError LispValue
 lvNumericFoldOp op (first : rest) = foldM (lvNumericBinop op) first rest
-lvNumericFoldOp _ _ = Left $ NotEnoughArgsError 1 0
+lvNumericFoldOp _ bal = Left $ NotEnoughArgsError 1 bal
 
 lvFractionalFoldop ::
   (forall a. Fractional a => a -> a -> a) ->
   [LispValue] ->
   Either LispError LispValue
 lvFractionalFoldop op (first : rest) = foldM (lvFractionalBinop op) first rest
-lvFractionalFoldop _ _ = Left $ NotEnoughArgsError 1 0
+lvFractionalFoldop _ bal = Left $ NotEnoughArgsError 1 bal
 
 lvIntegralBinop :: (Integer -> Integer -> Integer) -> [LispValue] -> Either LispError LispValue
 lvIntegralBinop op [a, b] = do

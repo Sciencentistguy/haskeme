@@ -1,6 +1,5 @@
 module Evaluator.Procedure where
 
-import Control.Monad
 import Data.Char
 import Evaluator.Procedure.Boolean
 import Evaluator.Procedure.List
@@ -42,11 +41,6 @@ builtins func = case func of
   "string>?" -> Just $ lvBoolBinop valueToString (<)
   "string>=?" -> Just $ lvBoolBinop valueToString (>=)
   "string<=?" -> Just $ lvBoolBinop valueToString (<=)
-  "string-ci=?" -> Just $ lvBoolBinop valueToLowerString (==)
-  "string-ci<?" -> Just $ lvBoolBinop valueToLowerString (>)
-  "string-ci>?" -> Just $ lvBoolBinop valueToLowerString (<)
-  "string>=?" -> Just $ lvBoolBinop valueToLowerString (>=)
-  "string<=?" -> Just $ lvBoolBinop valueToLowerString (<=)
   "car" -> Just car
   "cdr" -> Just cdr
   "cons" -> Just cons
@@ -57,13 +51,13 @@ builtins func = case func of
   "string" -> Just string
   "string-length" -> Just stringLength
   "string-ref" -> Just stringRef
-  "substring" -> Just substring
-  "string-append" -> Just stringAppend
-  "string->list" -> Just stringToList
-  "list->string" -> Just listToString
+  "string-ci=?" -> Just $ lvBoolBinop (valueToString >>= fmap toLower) (==) x
+  "string<?" -> Just $ lvBoolBinop (valueToString >>= fmap toLower) (>) x
+  "string>?" -> Just $ lvBoolBinop valueToString (<)
+  "string>=?" -> Just $ lvBoolBinop valueToString (>=)
+  "string<=?" -> Just $ lvBoolBinop valueToString (<=)
   _ -> Nothing
 
-valueToLowerString :: LispValue -> SchemeResult String
-valueToLowerString x = do
-  x <- valueToString x
-  return $ toLower <$> x
+
+f :: Functor f => f Char -> f Char
+f = fmap toLower

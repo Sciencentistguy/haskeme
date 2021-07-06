@@ -46,6 +46,11 @@ valueToList v = case v of
   ListValue l -> Right l
   _ -> Left $ TypeMismatchError "list" v
 
+valueToChar :: LispValue -> SchemeResult Char
+valueToChar v = case v of
+  CharacterValue c -> Right c
+  _ -> Left $ TypeMismatchError "character" v
+
 removeExactness :: SchemeNumber -> SchemeNumber'
 removeExactness a = case a of
   Exact a -> a
@@ -79,7 +84,8 @@ instance Ord SchemeNumber' where
 
 data LispError
   = NumArgsError Integer [LispValue]
-  | NotEnoughArgsError Integer Integer
+  | NotEnoughArgsError Integer [LispValue]
+  | TooManyArgsError Integer [LispValue]
   | TypeMismatchError String LispValue
   | ParserError (ParseErrorBundle String Void)
   | BadSpecialFormError String LispValue
@@ -97,9 +103,15 @@ instance Show LispError where
   show (NotEnoughArgsError min actual) =
     "Error: expected at least "
       ++ show min
-      ++ " args, found "
+      ++ " args, found `"
       ++ show actual
-      ++ "."
+      ++ "`."
+  show (TooManyArgsError max actual) =
+    "Error: expected at most "
+      ++ show max
+      ++ " args, found `"
+      ++ show actual
+      ++ "`."
   show (TypeMismatchError expected found) =
     "Error: expected type `"
       ++ expected

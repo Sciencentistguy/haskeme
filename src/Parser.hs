@@ -44,7 +44,7 @@ pCharLit :: Parser LispValue
 pCharLit = do
   _ <- string "#\\"
   c <- anySingle
-  more <- many anySingle
+  more <- many letterChar
   let name =
         if isAlpha c && not (null more)
           then Just $ c : more

@@ -28,6 +28,7 @@ library
       Evaluator.Procedure.Boolean
       Evaluator.Procedure.List
       Evaluator.Procedure.Number
+      Evaluator.Procedure.String
       Evaluator.Procedure.Symbol
       Evaluator.Procedure.Type
       Parser
