@@ -4,6 +4,7 @@
 module Evaluator where
 
 import Control.Monad.Except
+import Data.List
 import Data.Maybe
 import Evaluator.Procedure
 import Safe
@@ -15,6 +16,7 @@ eval val@(NumberValue _) = Right val
 eval val@(BooleanValue _) = Right val
 eval (ListValue [SymbolValue "quote", val]) = Right val
 eval (ListValue (SymbolValue "cond" : vals)) = cond vals
+eval (ListValue (SymbolValue "case" : val : clauses)) = case' val clauses
 eval (ListValue [SymbolValue "if", pred, then', else']) = do
   res <- eval pred
   case res of
@@ -36,17 +38,14 @@ data CondClause
   | ElseClause [LispValue]
 
 cond :: SchemeFunction
-cond vals = do
-  let unwrapper val = case val of
-        ListValue v -> Right v
-        _ -> Left $ TypeMismatchError "list" val
+cond clauses = do
   let parser clause = case clause of
         (SymbolValue "else" : exprs) -> Right $ ElseClause exprs
         (test : SymbolValue "=>" : [expr]) -> Right $ ArrowClause test expr
         (test : exprs) -> Right $ StandardClause test exprs
-        _ -> Left $ BadSpecialFormError "`cond` clause must be of the form `(test => expr)` or `(test expr+)`" (ListValue clause)
-  vs <- traverse unwrapper vals
-  clauses <- traverse parser vs
+        _ -> Left $ BadSpecialFormError "`cond` clause must be of the form `(test => expr)` or `(test expr*)`" (ListValue clause)
+  clauses <- traverse valueToList clauses
+  clauses <- traverse parser clauses
 
   let doClause clause = case clause of
         ArrowClause test expr -> do
@@ -81,3 +80,44 @@ cond vals = do
       evaled <- traverse eval xs
       return $ last evaled
     Nothing -> return $ SymbolValue "nil" -- return value unspecified (nil)
+
+data CaseClause
+  = StandardCaseClause LispValue [LispValue]
+  | ElseCaseClause [LispValue]
+
+extractDatum :: CaseClause -> Maybe LispValue
+extractDatum clause = case clause of
+  StandardCaseClause d _ -> Just d
+  _ -> Nothing
+
+case' :: LispValue -> [LispValue] -> SchemeResult LispValue
+case' val clauses'' = do
+  let parser clause = case clause of
+        (SymbolValue "else" : exprs) -> Right $ ElseCaseClause exprs
+        (datum : exprs) -> Right $ StandardCaseClause datum exprs
+        _ -> Left $ BadSpecialFormError "`case` clause must be of the form `(datum expr*)` or `(else expr*)`" $ ListValue clause
+  clauses' <- traverse valueToList clauses''
+  clauses <- traverse parser clauses'
+
+  let datums = catMaybes $ extractDatum <$> clauses
+      allUnique = nub datums == datums
+
+  unless allUnique $ throwError $ BadSpecialFormError "all datums in a case expression must be unique" $ ListValue clauses''
+
+  let doClause clause = case clause of
+        StandardCaseClause datum exprs -> do
+          datum' <- eval datum
+          return
+            if datum' == val
+              then Just $ eval <$> exprs
+              else Nothing
+        ElseCaseClause exprs -> do
+          return $ Just $ eval <$> exprs
+  parsed <- traverse doClause clauses
+  let toExecute = headMay $ catMaybes parsed
+  case toExecute of
+    Just xs -> do
+      xs <- sequenceA xs
+      evaled <- traverse eval xs
+      return $ last evaled
+    Nothing -> return $ SymbolValue "nil"

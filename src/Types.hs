@@ -41,6 +41,11 @@ valueToString v = case v of
   StringValue s -> Right s
   _ -> Left $ TypeMismatchError "string" v
 
+valueToList :: LispValue -> SchemeResult [LispValue]
+valueToList v = case v of
+  ListValue l -> Right l
+  _ -> Left $ TypeMismatchError "list" v
+
 removeExactness :: SchemeNumber -> SchemeNumber'
 removeExactness a = case a of
   Exact a -> a
