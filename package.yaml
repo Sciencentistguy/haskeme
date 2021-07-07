@@ -25,6 +25,8 @@ dependencies:
 - safe
 - vector
 - mtl
+- either
+- monad-loops
 
 default-extensions:
   BlockArguments

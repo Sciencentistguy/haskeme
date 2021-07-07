@@ -1,9 +1,12 @@
+{-# LANGUAGE RankNTypes #-}
+
 module Parser.Number
   ( pNumberLit,
   )
 where
 
 import Data.Maybe
+import Data.Ratio
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
@@ -56,20 +59,19 @@ pNumericalTags = do
 pIntegerLit :: Parser LispValue
 pIntegerLit = do
   (base, exactness) <- try pNumericalTags
-  let exactF = case exactness of
-        Just Inexact' -> Inexact
-        _ -> Exact
   let pInteger = case base of
         Decimal -> L.decimal
         Binary -> L.binary
         Hexadecimal -> L.hexadecimal
         Octal -> L.octal
-  NumberValue . exactF . SchemeInteger <$> pInteger
+  NumberValue <$> case exactness of
+    Just Inexact' -> Inexact . SchemeReal . fromInteger <$> pInteger
+    _ -> Exact . SchemeInteger <$> pInteger
 
 pFloatingLit :: Parser LispValue
 pFloatingLit = do
   (base, exactness) <- try pNumericalTags
-  let fractionParser = case base of
+  let p = case base of
         Decimal -> decFloat True
         Binary -> binFloat True
         Hexadecimal -> hexFloat True
@@ -78,11 +80,27 @@ pFloatingLit = do
         case x of
           Right f -> return f
           Left _ -> fail ""
-  let pFractional = fractionParser >>= f
+  let pFractional = p >>= f
   d <- pFractional
   case exactness of
     Just Exact' -> return $ NumberValue $ Exact $ SchemeRational $ toRational d
     _ -> return $ NumberValue $ Inexact $ SchemeReal d
 
+pRationalLit :: Parser LispValue
+pRationalLit = do
+  (base, exactness) <- try pNumericalTags
+  let p = case base of
+        Decimal -> L.decimal
+        Binary -> L.binary
+        Hexadecimal -> L.hexadecimal
+        Octal -> L.octal
+  num <- p
+  _ <- char '/'
+  den <- p
+  return $
+    NumberValue $ case exactness of
+      Just Inexact' -> Inexact $ SchemeReal $ fromRational $ num % den
+      _ -> Exact $ SchemeRational $ num % den
+
 pNumberLit :: Parser LispValue
-pNumberLit = try pFloatingLit <|> pIntegerLit
+pNumberLit = try pFloatingLit <|> try pRationalLit <|> pIntegerLit

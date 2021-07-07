@@ -2,7 +2,9 @@
 
 module Types where
 
+import Data.Ratio
 import Data.Vector (Vector)
+import qualified Data.Vector as V
 import Data.Void (Void)
 import Text.Megaparsec
 
@@ -17,7 +19,24 @@ data LispValue
   | BooleanValue Bool
   | CharacterValue Char
   | VectorValue (Vector LispValue)
-  deriving (Show, Eq)
+  deriving (Eq)
+
+instance Show LispValue where
+  show (SymbolValue s) = s
+  show (ListValue l) = "(" ++ unwords (show <$> l) ++ ")"
+  show (DottedListValue xs x) = "(" ++ unwords (show <$> xs) ++ " . " ++ show x ++ ")" --TODO
+  show (NumberValue n) = show n --TODO
+  show (StringValue s) = '"' : s ++ ['"']
+  show (BooleanValue b) =
+    if b
+      then "#t"
+      else "#f"
+  show (CharacterValue c) =
+    "\\#" ++ case c of
+      ' ' -> "space"
+      '\n' -> "newline"
+      c -> [c]
+  show (VectorValue v) = "#(" ++ unwords (V.toList $ show <$> v) ++ ")"
 
 valueToNumber :: LispValue -> SchemeResult SchemeNumber
 valueToNumber v = case v of
@@ -51,15 +70,25 @@ valueToChar v = case v of
   CharacterValue c -> Right c
   _ -> Left $ TypeMismatchError "character" v
 
+data SchemeNumber
+  = Exact SchemeNumber'
+  | Inexact SchemeNumber'
+  deriving (Eq)
+
+instance Show SchemeNumber where
+  show (Exact sn') = case sn' of
+    SchemeInteger i -> show i
+    SchemeRational rat -> show (numerator rat) ++ "/" ++ show (denominator rat)
+    SchemeReal _ -> error "an exact float is impossible"
+  show (Inexact sn') = case sn' of
+    SchemeInteger _ -> error "an Inexact real is impssible"
+    SchemeRational _ -> error "an Inexact rational is impossible"
+    SchemeReal r -> show r
+
 removeExactness :: SchemeNumber -> SchemeNumber'
 removeExactness a = case a of
   Exact a -> a
   Inexact a -> a
-
-data SchemeNumber
-  = Exact SchemeNumber'
-  | Inexact SchemeNumber'
-  deriving (Show, Eq)
 
 data SchemeNumber'
   = SchemeReal Double

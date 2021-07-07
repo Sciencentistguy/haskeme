@@ -2,6 +2,7 @@ module Parser where
 
 import Control.Monad
 import Data.Char
+import Data.Either.Combinators
 import qualified Data.Vector as V
 import Data.Void (Void)
 import Parser.Number
@@ -117,8 +118,8 @@ pExpr =
       _ <- symbol ")"
       return x
 
-readExpr :: String -> Either (ParseErrorBundle String Void) LispValue
-readExpr = parse (spaces >> pExpr) "<stdin>"
+readExpr :: String -> Either LispError LispValue
+readExpr x = mapLeft ParserError $ parse (spaces >> pExpr) "<stdin>" x
 
 assert :: MonadFail m => Bool -> String -> m ()
 assert expr msg = unless expr $ fail $ "assert failed: " ++ msg
