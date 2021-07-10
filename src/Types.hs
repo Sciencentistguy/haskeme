@@ -1,7 +1,12 @@
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Types where
 
+import Control.Monad.Except
+import Data.Functor
+import Data.HashMap.Strict (HashMap)
+import Data.IORef
 import Data.Ratio
 import Data.Vector (Vector)
 import qualified Data.Vector as V
@@ -176,3 +181,19 @@ instance Show LispError where
 type SchemeResult = Either LispError
 
 type SchemeFunction = [LispValue] -> SchemeResult LispValue
+
+type SchemeIOFunction = [LispValue] -> IOResult LispValue
+
+type Environment = HashMap String (IORef LispValue)
+
+type IOResult = ExceptT LispError IO
+
+liftResult :: SchemeResult a -> IOResult a
+liftResult (Left e) = throwError e
+liftResult (Right v) = return v
+
+runIOResult :: IOResult String -> IO String
+runIOResult action =
+  runExceptT (action `catchError` (return . show)) <&> \case
+    Right x -> x
+    Left x -> show x
