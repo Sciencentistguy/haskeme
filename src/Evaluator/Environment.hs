@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Evaluator.Environment where
 
 import Control.Monad.Except
@@ -39,5 +41,21 @@ defineVar envPtr name value = do
       valuePtr <- newIORef value
       modifyIORef' envPtr $ HM.insert name valuePtr
       return value
+
+bindVars :: IORef Environment -> [(String, LispValue)] -> IO (IORef Environment)
+bindVars envPtr bindings = do
+  env <- readIORef envPtr
+  bindings <- traverse liftIORef bindings
+  let x = extendEnv bindings env
+  newIORef x
+  where
+    extendEnv xs env = HM.union (HM.fromList xs) env
+    liftIORef (x, v) = do
+      v <- newIORef v
+      return (x, v)
+
+--extendEnv ((k, v) : xs) env = do
+--v <- newIORef v
+--return $ extendEnv xs $ HM.insert k v env
 
 --TODO bindvars

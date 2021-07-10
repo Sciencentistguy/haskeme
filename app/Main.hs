@@ -6,6 +6,7 @@ import Data.Either.Combinators
 import Data.IORef
 import Evaluator
 import Evaluator.Environment
+import Evaluator.Procedure
 import Parser
 import System.Environment
 import System.IO
@@ -44,10 +45,10 @@ evalAndPrint envPtr expr =
    in d >>= putStrLn
 
 runOne :: String -> IO ()
-runOne expr = nullEnvPtr >>= flip evalAndPrint expr
+runOne expr = primitiveBindings >>= flip evalAndPrint expr
 
 runRepl :: IO ()
-runRepl = nullEnvPtr >>= until_ (== "quit") (readWithPrompt "> ") . evalAndPrint
+runRepl = primitiveBindings >>= until_ (== "quit") (readWithPrompt "> ") . evalAndPrint
 
 until_ :: Monad m => (t -> Bool) -> m t -> (t -> m a) -> m ()
 until_ p prompt action = do

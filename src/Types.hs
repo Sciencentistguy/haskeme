@@ -1,5 +1,6 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Types where
 
@@ -24,7 +25,24 @@ data LispValue
   | BooleanValue Bool
   | CharacterValue Char
   | VectorValue (Vector LispValue)
-  deriving (Eq)
+  | PrimitiveFunctionValue SchemeFunction
+  | FunctionValue
+      { fParams :: [String],
+        fVararg :: Maybe String,
+        fBody :: [LispValue],
+        fClosure :: IORef Environment
+      }
+
+instance Eq LispValue where
+  (SymbolValue a) == (SymbolValue b) = a == b
+  (ListValue a) == (ListValue b) = a == b
+  (DottedListValue as a) == (DottedListValue bs b) = as == bs && a == b
+  (NumberValue a) == (NumberValue b) = a == b
+  (StringValue a) == (StringValue b) = a == b
+  (BooleanValue a) == (BooleanValue b) = a == b
+  (CharacterValue a) == (CharacterValue b) = a == b
+  (VectorValue a) == (VectorValue b) = a == b
+  _ == _ = False
 
 instance Show LispValue where
   show (SymbolValue s) = s
@@ -42,6 +60,14 @@ instance Show LispValue where
       '\n' -> "newline"
       c -> [c]
   show (VectorValue v) = "#(" ++ unwords (V.toList $ show <$> v) ++ ")"
+  show (PrimitiveFunctionValue _) = "<primitive>"
+  show FunctionValue {..} =
+    "(lambda (" ++ unwords (show <$> fParams)
+      ++ ( case fVararg of
+             Nothing -> ""
+             Just arg -> " . " ++ arg
+         )
+      ++ ") ...)"
 
 valueToNumber :: LispValue -> SchemeResult SchemeNumber
 valueToNumber v = case v of
@@ -123,7 +149,6 @@ data LispError
   | TypeMismatchError String LispValue
   | ParserError (ParseErrorBundle String Void)
   | BadSpecialFormError String LispValue
-  | NotFunctionError String String
   | UnboundVariableError String String
   | DefaultError String
 
@@ -157,13 +182,6 @@ instance Show LispError where
     "Error: bad special form `"
       ++ show form
       ++ "`."
-      ++ if not $ null message
-        then " (" ++ message ++ ")"
-        else ""
-  show (NotFunctionError message func) =
-    "Error: `"
-      ++ func
-      ++ "` is not a function."
       ++ if not $ null message
         then " (" ++ message ++ ")"
         else ""
