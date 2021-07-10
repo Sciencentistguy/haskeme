@@ -10,6 +10,7 @@ import Data.List
 import Data.Maybe
 import Evaluator.Environment
 import Evaluator.Procedure
+import Evaluator.Procedure.IO
 import Safe
 import Types
 
@@ -38,8 +39,11 @@ eval envPtr (ListValue (SymbolValue "define" : ListValue (SymbolValue name : par
   defineVar envPtr name func
 eval envPtr (ListValue (SymbolValue "lambda" : ListValue params : body)) =
   makeNormalFunc envPtr params body
-eval envPtr (ListValue (SymbolValue "lambda" : varargs@(SymbolValue _) : body)) = do
+eval envPtr (ListValue (SymbolValue "lambda" : varargs@(SymbolValue _) : body)) =
   makeVarArgs varargs envPtr ([] :: [LispValue]) body
+eval envPtr (ListValue [SymbolValue "load", StringValue filename]) = do
+  contents <- load filename
+  last <$> traverse (eval envPtr) contents
 eval
   envPtr
   ( ListValue
@@ -73,6 +77,7 @@ apply FunctionValue {..} args =
     bindVarArgs arg envPtr = case arg of
       Just argName -> liftIO $ bindVars envPtr [(argName, ListValue remainingArgs)]
       Nothing -> return envPtr
+apply (IOFunctionValue func) args = func args
 apply notAFunction _ = throwError $ TypeMismatchError "function" notAFunction
 
 --apply FunctionValue {..} args = case builtins fName of
@@ -174,3 +179,8 @@ case' envPtr val clauses' = do
       evaled <- traverse (eval envPtr) xs
       return $ last evaled
     Nothing -> return $ SymbolValue "nil"
+
+applyProc :: SchemeIOFunction
+applyProc [func, ListValue args] = apply func args
+applyProc (func : args) = apply func args
+applyProc bal = throwError $ NotEnoughArgsError 1 bal

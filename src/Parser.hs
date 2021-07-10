@@ -1,6 +1,9 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Parser where
 
 import Control.Monad
+import Control.Monad.Except
 import Data.Char
 import Data.Either.Combinators
 import qualified Data.Vector as V
@@ -118,8 +121,16 @@ pExpr =
       _ <- symbol ")"
       return x
 
+readOrThrow :: MonadError LispError m => Parsec Void String a -> String -> m a
+readOrThrow parser input = case parse parser "<stdin>" input of
+  Left err -> throwError $ ParserError err
+  Right val -> return val
+
 readExpr :: String -> Either LispError LispValue
-readExpr x = mapLeft ParserError $ parse (spaces >> pExpr) "<stdin>" x
+readExpr = readOrThrow pExpr
+
+readExprList :: MonadError LispError m => String -> m [LispValue]
+readExprList = readOrThrow $ endBy pExpr spaces
 
 assert :: MonadFail m => Bool -> String -> m ()
 assert expr msg = unless expr $ fail $ "assert failed: " ++ msg

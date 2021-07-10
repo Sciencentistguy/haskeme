@@ -2,14 +2,17 @@ module Evaluator.Procedure where
 
 import Control.Monad
 import Data.Char
+import qualified Data.HashMap.Strict as HM
 import Data.IORef
 import Evaluator.Environment
 import Evaluator.Procedure.Boolean
+import Evaluator.Procedure.IO
 import Evaluator.Procedure.List
 import Evaluator.Procedure.Number
 import Evaluator.Procedure.String
 import Evaluator.Procedure.Symbol
 import Evaluator.Procedure.Type
+import GHC.IO.IOMode
 import Types
 
 primitives :: [(String, SchemeFunction)]
@@ -65,6 +68,19 @@ primitives =
     ("list->string", listToString)
   ]
 
+ioPrimitives :: [(String, SchemeIOFunction)]
+ioPrimitives =
+  [ --("apply", applyProc),
+    ("open-input-file", makePort ReadMode),
+    ("open-output-file", makePort WriteMode),
+    ("close-input-port", closePort),
+    ("close-output-port", closePort),
+    ("read", read'),
+    ("write", write'),
+    ("read-contents", readContents),
+    ("read-all", readAll)
+  ]
+
 valueToLowerString :: LispValue -> SchemeResult String
 valueToLowerString x = do
   x <- valueToString x
@@ -74,9 +90,11 @@ primitiveBindings :: IO (IORef Environment)
 primitiveBindings = do
   let
   envPtr <- nullEnvPtr
-  bindVars envPtr $ makePrimitiveFunc <$> primitives
+  let prims = makeFunc PrimitiveFunctionValue <$> primitives
+      ioPrims = makeFunc IOFunctionValue <$> ioPrimitives
+  bindVars envPtr $ prims ++ ioPrims
   where
-    makePrimitiveFunc (var, fName) = (var, PrimitiveFunctionValue fName)
+    makeFunc constructor (var, fName) = (var, constructor fName)
 
 makeFunc ::
   (Monad m, Show a) =>

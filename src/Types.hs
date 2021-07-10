@@ -12,6 +12,7 @@ import Data.Ratio
 import Data.Vector (Vector)
 import qualified Data.Vector as V
 import Data.Void (Void)
+import GHC.IO.Handle
 import Text.Megaparsec
 
 type Parser = Parsec Void String
@@ -32,6 +33,8 @@ data LispValue
         fBody :: [LispValue],
         fClosure :: IORef Environment
       }
+  | IOFunctionValue SchemeIOFunction
+  | IOPortValue Handle
 
 instance Eq LispValue where
   (SymbolValue a) == (SymbolValue b) = a == b
@@ -42,6 +45,7 @@ instance Eq LispValue where
   (BooleanValue a) == (BooleanValue b) = a == b
   (CharacterValue a) == (CharacterValue b) = a == b
   (VectorValue a) == (VectorValue b) = a == b
+  (IOPortValue a) == (IOPortValue b) = a == b
   _ == _ = False
 
 instance Show LispValue where
@@ -68,6 +72,8 @@ instance Show LispValue where
              Just arg -> " . " ++ arg
          )
       ++ ") ...)"
+  show (IOPortValue x) = "<IO Port (" ++ show x ++ ")>"
+  show (IOFunctionValue _) = "<IO primtive>"
 
 valueToNumber :: LispValue -> SchemeResult SchemeNumber
 valueToNumber v = case v of
@@ -100,6 +106,11 @@ valueToChar :: LispValue -> SchemeResult Char
 valueToChar v = case v of
   CharacterValue c -> Right c
   _ -> Left $ TypeMismatchError "character" v
+
+valueToHandle :: LispValue -> SchemeResult Handle
+valueToHandle v = case v of
+  IOPortValue h -> Right h
+  _ -> Left $ TypeMismatchError "port" v
 
 data SchemeNumber
   = Exact SchemeNumber'

@@ -18,8 +18,7 @@ main = do
   args <- getArgs
   case args of
     [] -> runRepl
-    [input] -> runOne input
-    _ -> putStrLn "Too many arguments provided"
+    _ -> runOne args
 
 flushStr :: String -> IO ()
 flushStr str = do
@@ -44,8 +43,13 @@ evalAndPrint envPtr expr =
       d = runIOResult c
    in d >>= putStrLn
 
-runOne :: String -> IO ()
-runOne expr = primitiveBindings >>= flip evalAndPrint expr
+runOne :: [String] -> IO ()
+runOne [] = unreachable
+runOne args = do
+  baseEnv <- primitiveBindings
+  envPtr <- bindVars baseEnv [("args", ListValue $ StringValue <$> drop 1 args)]
+  err <- runIOResult $ show <$> eval envPtr (ListValue [SymbolValue "load", StringValue (head args)])
+  hPutStrLn stderr err
 
 runRepl :: IO ()
 runRepl = primitiveBindings >>= until_ (== "quit") (readWithPrompt "> ") . evalAndPrint

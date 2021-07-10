@@ -27,6 +27,7 @@ library
       Evaluator.Environment
       Evaluator.Procedure
       Evaluator.Procedure.Boolean
+      Evaluator.Procedure.IO
       Evaluator.Procedure.List
       Evaluator.Procedure.Number
       Evaluator.Procedure.String
