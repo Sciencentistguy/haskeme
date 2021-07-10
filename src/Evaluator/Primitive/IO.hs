@@ -1,4 +1,4 @@
-module Evaluator.Procedure.IO where
+module Evaluator.Primitive.IO where
 
 import Control.Monad.Except
 import GHC.IO.IOMode

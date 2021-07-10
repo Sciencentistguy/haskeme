@@ -6,7 +6,6 @@ import Data.Either.Combinators
 import Data.IORef
 import Evaluator
 import Evaluator.Environment
-import Evaluator.Procedure
 import Parser
 import System.Environment
 import System.IO

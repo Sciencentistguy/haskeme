@@ -1,6 +1,6 @@
 {-# LANGUAGE RankNTypes #-}
 
-module Evaluator.Procedure.Number where
+module Evaluator.Primitive.Number where
 
 import Control.Monad
 import Types

@@ -12,6 +12,7 @@ import Parser.Number
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
+import Text.Megaparsec.Debug
 import Types
 
 spaces :: Parser ()
@@ -61,16 +62,45 @@ pCharLit = do
     _ -> fail "invalid named character in character literal"
 
 pList :: Parser LispValue
-pList = ListValue <$> sepEndBy pExpr spaces
+pList = spaces >> symbol "(" >> pList1
+
+pList1 :: Parser LispValue
+pList1 =
+  try do
+    spaces
+    _ <- symbol ")"
+    return $ ListValue []
+    <|> do
+      expr <- pExpr
+      pList2 [expr]
+
+pList2 :: [LispValue] -> Parser LispValue
+pList2 expr =
+  try do
+    spaces
+    _ <- symbol ")"
+    return $ ListValue $ reverse expr
+    <|> (spaces >> pList3 expr)
+
+pList3 :: [LispValue] -> Parser LispValue
+pList3 expr =
+  do
+    spaces
+    _ <- symbol "."
+    dotted <- pExpr
+    spaces
+    _ <- symbol ")"
+    return $ DottedListValue expr dotted
+    <|> do
+      next <- pExpr
+      pList2 (next : expr)
 
 pDottedList :: Parser LispValue
-pDottedList = do
-  head <- endBy pExpr spaces
-  tail <- do
-    _ <- char '.'
-    spaces
-    pExpr
-  return $ DottedListValue head tail
+pDottedList = dbg "pDottedList" $ do
+  init <- endBy pExpr spaces
+  _ <- char '.'
+  _ <- spaces
+  DottedListValue init <$> pExpr
 
 pQuoted :: Parser LispValue
 pQuoted = do
@@ -115,12 +145,16 @@ pExpr =
     <|> pQuoted
     <|> pSymbol
     <|> pStringLit
-    <|> do
-      _ <- symbol "("
-      x <- try pList <|> pDottedList
-      _ <- symbol ")"
-      return x
+    <|> pList
 
+{-
+ -    do
+ -      _ <- symbol "("
+ -      x <- try pList <|> pDottedList
+ -      _ <- symbol ")"
+ -      return x
+ -
+ -}
 readOrThrow :: MonadError LispError m => Parsec Void String a -> String -> m a
 readOrThrow parser input = case parse parser "<stdin>" input of
   Left err -> throwError $ ParserError err

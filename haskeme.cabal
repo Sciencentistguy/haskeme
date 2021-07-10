@@ -25,14 +25,13 @@ library
   exposed-modules:
       Evaluator
       Evaluator.Environment
-      Evaluator.Procedure
-      Evaluator.Procedure.Boolean
-      Evaluator.Procedure.IO
-      Evaluator.Procedure.List
-      Evaluator.Procedure.Number
-      Evaluator.Procedure.String
-      Evaluator.Procedure.Symbol
-      Evaluator.Procedure.Type
+      Evaluator.Primitive.Boolean
+      Evaluator.Primitive.IO
+      Evaluator.Primitive.List
+      Evaluator.Primitive.Number
+      Evaluator.Primitive.String
+      Evaluator.Primitive.Symbol
+      Evaluator.Primitive.Type
       Parser
       Parser.Number
       Text.Megaparsec.Char.Number

@@ -1,4 +1,4 @@
-module Evaluator.Procedure.List where
+module Evaluator.Primitive.List where
 
 import Types
 

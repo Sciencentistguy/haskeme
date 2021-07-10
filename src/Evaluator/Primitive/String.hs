@@ -1,4 +1,4 @@
-module Evaluator.Procedure.String where
+module Evaluator.Primitive.String where
 
 import Control.Monad
 import Control.Monad.Except

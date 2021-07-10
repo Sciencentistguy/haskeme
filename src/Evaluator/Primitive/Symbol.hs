@@ -1,4 +1,4 @@
-module Evaluator.Procedure.Symbol where
+module Evaluator.Primitive.Symbol where
 
 import Types
 
