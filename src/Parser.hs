@@ -5,7 +5,6 @@ module Parser where
 import Control.Monad
 import Control.Monad.Except
 import Data.Char
-import Data.Either.Combinators
 import qualified Data.Vector as V
 import Data.Void (Void)
 import Parser.Number

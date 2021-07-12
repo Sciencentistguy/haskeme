@@ -1,8 +1,5 @@
 module Main where
 
-import Control.Monad.Except
-import Data.Either
-import Data.Either.Combinators
 import Data.IORef
 import Evaluator
 import Evaluator.Environment

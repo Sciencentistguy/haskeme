@@ -2,7 +2,6 @@ module Evaluator.Primitive.String where
 
 import Control.Monad
 import Control.Monad.Except
-import Data.Char
 import Data.List
 import Types
 
